@@ -117,7 +117,7 @@ class Producer:
         #
         #
         #logger.info("producer close incomplete - skipping")
-        self.producer.close()
+        self.producer.flush()
 
     def time_millis(self):
         """Use this function to get the key for Kafka Events"""

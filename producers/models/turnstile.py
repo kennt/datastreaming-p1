@@ -30,7 +30,7 @@ class Turnstile(Producer):
             .replace("-", "_")
             .replace("'", "")
         )
-        self.topic_name = f"{station_name}_turnstile" # TODO: Come up with a better topic name
+        self.topic_name = f"com.udacity.turnstile.event.{station_name}" # TODO: Come up with a better topic name
         #
         #
         # TODO: Complete the below by deciding on a topic name, number of partitions, and number of
@@ -51,28 +51,21 @@ class Turnstile(Producer):
     def run(self, timestamp, time_step):
         """Simulates riders entering through the turnstile."""
         num_entries = self.turnstile_hardware.get_entries(timestamp, time_step)
-        logger.info(f"turnstile kafka integration creating {num_entries}")
         #
         #
         # TODO: Complete this function by emitting a message to the turnstile topic for the number
         # of entries that were calculated
         #
         #
-        #logger.info("arrival kafka integration incomplete - skipping")
         for _ in range(num_entries):
             self.producer.produce(
                 topic=self.topic_name,
                 key={"timestamp": self.time_millis()},
                 key_schema=self.key_schema,
                 value={
-                    #
-                    #
-                    # TODO: Configure this
-                    #
-                    #
                     "station_id": self.station.station_id,
                     "station_name": self.station.name,
-                    "line": self.station.color,
+                    "line": self.station.color.name,
                 },
                 value_schema=self.value_schema
             )
