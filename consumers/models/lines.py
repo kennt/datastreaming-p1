@@ -18,11 +18,18 @@ class Lines:
         self.blue_line = Line("blue")
 
     def process_message(self, message):
-        """Processes a station message"""
-        if "org.chicago.cta.station" in message.topic():
+        """Processes a station message
+            In addition to TURNSTILE_SUMMARY, two messages are
+            handled by the Line() model.
+                com.udacity.station.arrivals
+                com.udacity.stations.transformed
+            Both of these should be routed to the same Line model.
+        """
+        if "com.udacity.station" in message.topic():
             value = message.value()
-            if message.topic() == "org.chicago.cta.stations.table.v1":
+            if message.topic() == "com.udacity.stations.transformed":
                 value = json.loads(value)
+
             if value["line"] == "green":
                 self.green_line.process_message(message)
             elif value["line"] == "red":

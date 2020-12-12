@@ -11,8 +11,6 @@ def topic_exists(topic):
 
 def topic_create(topic_name, num_partitions=1, replication_factor=1):
     """Create a topic in Kafka"""
-    # TODO: Maybe merge topic_exists() and topic_create() to avoid
-    # the extra AdminClient() creation
     client = AdminClient({"bootstrap.servers": BOOTSTRAP_SERVER})
     futures = client.create_topics(
         [NewTopic(topic=topic_name,

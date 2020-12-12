@@ -3,14 +3,12 @@ import logging
 import logging.config
 from pathlib import Path
 
-import tornado.ioloop
-import tornado.template
-import tornado.web
-
-
 # Import logging before models to ensure configuration is picked up
 logging.config.fileConfig(f"{Path(__file__).parents[0]}/logging.ini")
 
+import tornado.ioloop
+import tornado.template
+import tornado.web
 
 from consumer import KafkaConsumer
 from models import Lines, Weather
@@ -46,7 +44,7 @@ def run_server():
             "Ensure that the KSQL Command has run successfully before running the web server!"
         )
         exit(1)
-    if topic_check.topic_exists("org.chicago.cta.stations.table.v1") is False:
+    if topic_check.topic_exists("com.udacity.stations.transformed") is False:
         logger.fatal(
             "Ensure that Faust Streaming is running successfully before running the web server!"
         )
@@ -63,18 +61,18 @@ def run_server():
     # Build kafka consumers
     consumers = [
         KafkaConsumer(
-            "org.chicago.cta.weather.v1",
+            "com.udacity.weather.event",
             weather_model.process_message,
             offset_earliest=True,
         ),
         KafkaConsumer(
-            "org.chicago.cta.stations.table.v1",
+            "com.udacity.stations.transformed",
             lines.process_message,
             offset_earliest=True,
             is_avro=False,
         ),
         KafkaConsumer(
-            "^org.chicago.cta.station.arrivals.",
+            "^com.udacity.station.arrivals",
             lines.process_message,
             offset_earliest=True,
         ),

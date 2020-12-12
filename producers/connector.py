@@ -6,6 +6,8 @@ from pathlib import Path
 
 import requests
 
+import topic_check
+
 # Import logging before models to ensure configuration is picked up
 logging.config.fileConfig(f"{Path(__file__).parents[0]}/logging.ini")
 
@@ -14,6 +16,8 @@ logger = logging.getLogger(__name__)
 
 KAFKA_CONNECT_URL = "http://localhost:8083/connectors"
 CONNECTOR_NAME = "stations"
+CONNECTOR_TOPIC_PREFIX="com.udacity.connect-"
+CONNECTOR_TOPIC_NAME=f"{CONNECTOR_TOPIC_PREFIX}{CONNECTOR_NAME}"
 
 def configure_connector():
     """Starts and configures the Kafka Connect connector"""
@@ -25,12 +29,13 @@ def configure_connector():
         return
     logger.info(f"need to create the kafka connector for {CONNECTOR_NAME}...")
 
-    # TODO: Complete the Kafka Connect Config below.
-    # Directions: Use the JDBC Source Connector to connect to Postgres. Load the `stations` table
-    # using incrementing mode, with `stop_id` as the incrementing column name.
-    # Make sure to think about what an appropriate topic prefix would be, and how frequently Kafka
-    # Connect should run this connector (hint: not very often!)
-    #logger.info("connector code not completed skipping connector creation")
+    # Ensure that the topic has been created
+    if not topic_check.topic_exists(CONNECTOR_TOPIC_NAME):
+        topic_check.topic_create(CONNECTOR_TOPIC_NAME)
+        logger.info(f"Topic created:{CONNECTOR_TOPIC_NAME}")
+    else:
+        logger.info(f"Using existingt topic:{CONNECTOR_TOPIC_NAME}")
+
     resp = requests.post(
         KAFKA_CONNECT_URL,
         headers={"Content-Type": "application/json"},
@@ -43,21 +48,13 @@ def configure_connector():
                 "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                 "value.converter.schemas.enable": "false",
                 "batch.max.rows": "500",
-                # TODO
                 "connection.url": "jdbc:postgresql://postgres:5432/cta",
-                # TODO
-               "connection.user": "cta_admin",
-                # TODO
+                "connection.user": "cta_admin",
                 "connection.password": "chicago",
-                # TODO
                 "table.whitelist": "stations",
-                # TODO
                 "mode": "incrementing",
-                # TODO
                 "incrementing.column.name": "stop_id",
-                # TODO
-                "topic.prefix": "com.udacity.connect-",
-                # TODO
+                "topic.prefix": CONNECTOR_TOPIC_PREFIX,
                 # Poll once an hour
                 "poll.interval.ms": "3600000",
             }

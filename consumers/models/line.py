@@ -4,7 +4,6 @@ import logging
 
 from models import Station
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -56,21 +55,25 @@ class Line:
 
     def process_message(self, message):
         """Given a kafka message, extract data"""
-        # TODO: Based on the message topic, call the appropriate handler.
-        if True: # Set the conditional correctly to the stations Faust Table
+        # Based on the message topic, call the appropriate handler.
+        topic = message.topic()
+        if topic == "com.udacity.stations.transformed":
             try:
+                # Load up the json manually, this message does not use Avro
                 value = json.loads(message.value())
                 self._handle_station(value)
             except Exception as e:
                 logger.fatal("bad station? %s, %s", value, e)
-        elif True: # Set the conditional to the arrival topic
+        elif "com.udacity.station.arrivals." in topic:
             self._handle_arrival(message)
-        elif True: # Set the conditional to the KSQL Turnstile Summary Topic
+        elif topic == "TURNSTILE_SUMMARY":
             json_data = json.loads(message.value())
             station_id = json_data.get("STATION_ID")
             station = self.stations.get(station_id)
             if station is None:
-                logger.debug("unable to handle message due to missing station")
+                # This is expected, since the TURNSTILE_SUMMARY message is
+                # sent to all line colors.  So this will fail twice and succeed once.
+                #logger.debug("unable to handle message due to missing station")
                 return
             station.process_message(json_data)
         else:
